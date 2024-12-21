@@ -3,8 +3,7 @@ public class Parcel {
     private double weight;
     private String dimensions;
     private double collectionFee;
-    private String status; // "Waiting" or "Collected"
-
+    private String status;
     public Parcel(String parcelID, double weight, String dimensions) {
         this.parcelID = parcelID;
         this.weight = weight;
@@ -14,7 +13,7 @@ public class Parcel {
     }
 
     public void calculateCollectionFee() {
-        this.collectionFee = weight * 5.0; // Example: $5 per kg
+        this.collectionFee = weight * 5.0;
     }
 
     public String getParcelID() {

@@ -12,9 +12,13 @@ public class QueueofCustomers {
         queue.add(customer);
     }
 
-    public Customer removeCustomer() {
-        return queue.poll();
-    }
+    public void removeCustomer(Customer c) {
+        for (Customer customer: queue) {
+            if (customer==c){
+                queue.remove(c);
+            }
+        }
+        }
 
     public Customer findCustomerByParcelID(String parcelID) {
         for (Customer customer : queue) {

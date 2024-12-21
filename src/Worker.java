@@ -12,7 +12,7 @@ public class Worker {
             log.addLogEntry("Processed parcel: " + parcel.getParcelID() +
                     " for customer: " + customer.getName() +
                     ". Fee: $" + parcel.getCollectionFee());
-            queue.removeCustomer();
+            queue.removeCustomer(customer);
         } else {
             log.addLogEntry("Error: Parcel not found or already collected for customer: " + customer.getName());
         }

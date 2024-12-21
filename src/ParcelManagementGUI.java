@@ -42,7 +42,7 @@ public class ParcelManagementGUI {
         JLabel parcelIDLabel = new JLabel("Parcel ID:");
         JLabel parcelWeightLabel = new JLabel("Parcel Weight (kg):");
         JLabel parcelDimensionsLabel = new JLabel("Parcel Dimensions:");
-        JButton AddValueButton = new JButton("Add Value");
+//        JButton AddValueButton = new JButton("Add Value");
 
         JButton addCustomerButton = new JButton("Add Customer");
         JButton addParcelButton = new JButton("Add Parcel");
@@ -79,6 +79,7 @@ public class ParcelManagementGUI {
         frame.add(mainPanel);
 
         addCustomerButton.addActionListener(e -> {
+            JButton AddValueButton = new JButton("Add Value");
             inputPanel.removeAll();
             inputPanel.add(customerNameLabel);
             inputPanel.add(customerNameField);
@@ -96,7 +97,7 @@ public class ParcelManagementGUI {
                     Customer customer = new Customer(sequenceNo, name, parcelID);
                     customerQueue.addCustomer(customer);
                     log.addLogEntry("Added customer: " + name + " with parcel ID: " + parcelID);
-                    customerTableModel.addRow(new Object[]{sequenceNo, name, parcelID});
+                    refreshcustomerTableModel();
                     JOptionPane.showMessageDialog(frame, "Customer added successfully.");
                 } else {
                     JOptionPane.showMessageDialog(frame, "Please fill in all fields for the customer.");
@@ -106,6 +107,7 @@ public class ParcelManagementGUI {
 
 
         addParcelButton.addActionListener(e -> {
+            JButton AddValueButton = new JButton("Add Value");
             inputPanel.removeAll();
             inputPanel.add(parcelIDLabel);
             inputPanel.add(parcelIDField);
@@ -129,6 +131,7 @@ public class ParcelManagementGUI {
                         log.addLogEntry("Added parcel: " + parcelID);
                         parcelTableModel.addRow(new Object[]{parcelID, weight, dimensions, parcel.getCollectionFee(), parcel.getStatus()});
                         JOptionPane.showMessageDialog(frame, "Parcel added successfully.");
+
                     } catch (NumberFormatException ex) {
                         JOptionPane.showMessageDialog(frame, "Invalid weight format.");
                     }
@@ -140,14 +143,33 @@ public class ParcelManagementGUI {
 
 
         removeCustomerButton.addActionListener(e -> {
-            if (!customerQueue.getQueue().isEmpty()) {
-                Customer removedCustomer = customerQueue.removeCustomer();
-                log.addLogEntry("Removed customer: " + removedCustomer.getName());
-                customerTableModel.removeRow(0);
-                JOptionPane.showMessageDialog(frame, "Customer removed successfully.");
-            } else {
-                JOptionPane.showMessageDialog(frame, "No customers in the queue to remove.");
-            }
+            JTextField RemoveparcelIDField = new JTextField();
+            JLabel RemoveparcelIDLabel = new JLabel("Parcel ID to Remove Customer:");
+            JButton AddValueButton = new JButton("Remove");
+            inputPanel.removeAll();
+            inputPanel.add(RemoveparcelIDLabel);
+            inputPanel.add(RemoveparcelIDField);
+            inputPanel.add(AddValueButton);
+            inputPanel.revalidate();
+            inputPanel.repaint();
+
+            AddValueButton.addActionListener(event -> {
+
+                if (!customerQueue.getQueue().isEmpty()) {
+                    Customer c = customerQueue.findCustomerByParcelID(RemoveparcelIDField.getText());
+                    if (c != null) {
+                        log.addLogEntry("Removed customer: " + c.getName());
+                        customerQueue.removeCustomer(c);
+                        refreshcustomerTableModel();
+                        JOptionPane.showMessageDialog(frame, c.getName() + " Customer removed successfully.");
+                    }
+                    else {
+                        JOptionPane.showMessageDialog(frame, "No customers with parcel ID " +RemoveparcelIDField.getText()+" was found in the queue to remove.");
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(frame, "No customers in the queue to remove.");
+                }
+            });
         });
 
         removeParcelButton.addActionListener(e -> {
@@ -188,6 +210,17 @@ public class ParcelManagementGUI {
         showLogButton.addActionListener(e -> logTextArea.setText(log.getLog()));
 
         frame.setVisible(true);
+    }
+
+
+    public void refreshcustomerTableModel(){
+        for (int i = 0; i < customerTableModel.getRowCount(); i++) {
+            customerTableModel.removeRow(i);
+        }
+        for (Customer c: customerQueue.getQueue()) {
+            customerTableModel.addRow(new Object[]{c.getSequenceNo(),c.getName(), c.getParcelID()});
+        }
+
     }
 
     public static void main(String[] args) {
