@@ -173,20 +173,44 @@ public class ParcelManagementGUI {
         });
 
         removeParcelButton.addActionListener(e -> {
-            String parcelID = parcelIDField.getText();
-            if (parcelMap.findParcelByID(parcelID) != null) {
-                parcelMap.getAllParcels().remove(parcelID);
-                log.addLogEntry("Removed parcel: " + parcelID);
-                for (int i = 0; i < parcelTableModel.getRowCount(); i++) {
-                    if (parcelTableModel.getValueAt(i, 0).equals(parcelID)) {
-                        parcelTableModel.removeRow(i);
-                        break;
-                    }
-                }
-                JOptionPane.showMessageDialog(frame, "Parcel removed successfully.");
-            } else {
-                JOptionPane.showMessageDialog(frame, "Parcel not found.");
+            JTextField RemoveParcelIDField = new JTextField();
+            JLabel RemoveParcelIDLabel = new JLabel("Parcel ID to Remove:");
+            JButton RemoveParcelButton = new JButton("Remove");
+
+            // Clear the input panel and set up new fields
+            inputPanel.removeAll();
+            inputPanel.add(RemoveParcelIDLabel);
+            inputPanel.add(RemoveParcelIDField);
+            inputPanel.add(RemoveParcelButton);
+            inputPanel.revalidate();
+            inputPanel.repaint();
+
+            // Reset previous action listeners for the RemoveParcelButton
+            for (ActionListener al : RemoveParcelButton.getActionListeners()) {
+                RemoveParcelButton.removeActionListener(al);
             }
+
+            // Add action listener for the RemoveParcelButton
+            RemoveParcelButton.addActionListener(event -> {
+                String parcelID = RemoveParcelIDField.getText().trim();
+
+                // Check for empty input
+                if (parcelID.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Please enter a Parcel ID to remove the parcel.");
+                    return;
+                }
+
+                // Check if the parcel exists in the parcelMap
+                Parcel parcel = parcelMap.findParcelByID(parcelID);
+                if (parcel != null) {
+                    log.addLogEntry("Removed parcel with ID: " + parcelID);
+                    parcelMap.getAllParcels().remove(parcelID); // Remove the parcel from the map
+                    refreshParcelTableModel(); // Method to update the table model
+                    JOptionPane.showMessageDialog(frame, "Parcel with ID " + parcelID + " removed successfully.");
+                } else {
+                    JOptionPane.showMessageDialog(frame, "No parcel with ID " + parcelID + " found to remove.");
+                }
+            });
         });
 
         processCustomerButton.addActionListener(e -> {
@@ -222,6 +246,25 @@ public class ParcelManagementGUI {
         }
 
     }
+
+
+    public void refreshParcelTableModel() {
+        // Clear all rows in the parcelTableModel
+        for (int i = parcelTableModel.getRowCount() - 1; i >= 0; i--) {
+            parcelTableModel.removeRow(i);
+        }
+
+        // Add rows for each parcel in the parcelMap
+        for (Parcel parcel : parcelMap.getAllParcels().values()) {
+            parcelTableModel.addRow(new Object[]{
+                    parcel.getParcelID(),
+                    parcel.getCollectionFee(),
+                    parcel.getStatus(),
+                    parcel.toString() // Or specific details like dimensions, weight
+            });
+        }
+    }
+
 
     public static void main(String[] args) {
         new ParcelManagementGUI();
