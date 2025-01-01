@@ -1,11 +1,13 @@
 public class Customer {
     private int sequenceNo;
-    private String name;
+    private String Firstname;
+    private String Lastname;
     private String parcelID;
 
-    public Customer(int sequenceNo, String name, String parcelID) {
+    public Customer(int sequenceNo, String name,String Lastname, String parcelID) {
         this.sequenceNo = sequenceNo;
-        this.name = name;
+        this.Firstname = name;
+        this.Lastname = Lastname;
         this.parcelID = parcelID;
     }
 
@@ -14,7 +16,10 @@ public class Customer {
     }
 
     public String getName() {
-        return name;
+        return Firstname;
+    }
+    public String getLastname() {
+        return Lastname;
     }
 
     public String getParcelID() {
@@ -25,7 +30,7 @@ public class Customer {
     public String toString() {
         return "Customer{" +
                 "sequenceNo=" + sequenceNo +
-                ", name='" + name + '\'' +
+                ", name='" + Firstname + '\'' +
                 ", parcelID='" + parcelID + '\'' +
                 '}';
     }

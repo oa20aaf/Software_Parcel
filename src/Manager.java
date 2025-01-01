@@ -1,3 +1,4 @@
+import java.text.ParseException;
 import java.util.Scanner;
 
 public class Manager {
@@ -9,10 +10,12 @@ public class Manager {
         Worker worker = new Worker(log);
 
         // Example data
-        parcelMap.addParcel(new Parcel("P001", 10, "10x10x10"));
-        parcelMap.addParcel(new Parcel("P002", 5, "5x5x5"));
-        queue.addCustomer(new Customer(1, "Alice", "P001"));
-        queue.addCustomer(new Customer(2, "Bob", "P002"));
+
+        parcelMap.addParcel(new Parcel("P001", 10, "125", "01/01/2024"));
+        parcelMap.addParcel(new Parcel("P002", 5, "100", "02/01/2024"));
+
+        queue.addCustomer(new Customer(1, "Alice", "John", "P001"));
+        queue.addCustomer(new Customer(2, "Bob", "Mathew", "P002"));
 
         // Command-line interface
         Scanner scanner = new Scanner(System.in);
