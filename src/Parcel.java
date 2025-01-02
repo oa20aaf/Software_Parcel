@@ -15,7 +15,7 @@ public class Parcel {
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
-    public Parcel(String parcelID, double weight, String dimensions, String dateReceived){
+    public Parcel(String parcelID, double weight, String dimensions, String dateReceived) {
         this.parcelID = parcelID;
         this.weight = weight;
         this.dimensions = dimensions;
@@ -29,8 +29,30 @@ public class Parcel {
         LocalDate receivedDate = LocalDate.parse(dateReceived, formatter);
         LocalDate currentDate = LocalDate.now();
         long daysDifference = ChronoUnit.DAYS.between(receivedDate, currentDate);
-        this.collectionFee = weight * Integer.valueOf(dimensions) * daysDifference;
+
+        // Calculate the volume (a * b * c)
+        int volume = calculateVolume(dimensions);
+
+        this.collectionFee = weight * volume * daysDifference;
         return collectionFee;
+    }
+
+    public static int calculateVolume(String dimensions) {
+        String[] parts = dimensions.split("X");
+        if (parts.length == 3) {
+            try {
+                int a = Integer.parseInt(parts[0]);
+                int b = Integer.parseInt(parts[1]);
+                int c = Integer.parseInt(parts[2]);
+                return a * b * c;
+            } catch (NumberFormatException e) {
+                System.err.println("Invalid dimensions format: " + dimensions);
+                return 0;
+            }
+        } else {
+            System.err.println("Dimensions format must be 'aXbXc': " + dimensions);
+            return 0;
+        }
     }
 
     public String getParcelID() {
@@ -63,13 +85,13 @@ public class Parcel {
         }
     }
 
-    public long getDateDiff(String dateReceived){
+    public long getDateDiff(String dateReceived) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate receivedDate = LocalDate.parse(dateReceived, formatter);
         LocalDate currentDate = LocalDate.now();
-        long daysDifference = ChronoUnit.DAYS.between(receivedDate, currentDate);
-        return daysDifference;
+        return ChronoUnit.DAYS.between(receivedDate, currentDate);
     }
+
     public double getWeight() {
         return weight;
     }

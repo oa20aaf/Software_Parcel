@@ -7,6 +7,9 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ParcelManagementGUI {
     private QueueofCustomers customerQueue;
@@ -30,10 +33,9 @@ public class ParcelManagementGUI {
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel inputPanel = new JPanel(new GridLayout(6, 2));
         JPanel buttonPanel = new JPanel(new GridLayout(3, 2));
-        JPanel logPanel = new JPanel(new BorderLayout());
         JPanel tablePanel = new JPanel(new GridLayout(1, 2));
 
-// JTextField components
+        // JTextField components
         JTextField customerNameField = new JTextField();
         JTextField customerLastNameField = new JTextField();
         JTextField parcelIDField = new JTextField();
@@ -41,6 +43,7 @@ public class ParcelManagementGUI {
         JTextField parcelDimensionsField = new JTextField();
         JTextArea logTextArea = new JTextArea(10, 50);
         logTextArea.setEditable(false);
+
 
 // JLabel components
         JLabel customerNameLabel = new JLabel("Customer Name:");
@@ -60,6 +63,9 @@ public class ParcelManagementGUI {
         JButton exportParcels = new JButton("Export Parcels");
         JButton importCustomerButton = new JButton("Import Customers");
         JButton exportCustomerButton = new JButton("Export Customers");
+        JButton generateReportButton = new JButton("Generate Report");
+
+
 
 // Add buttons to the button panel
         buttonPanel.add(addCustomerButton);
@@ -72,15 +78,17 @@ public class ParcelManagementGUI {
         buttonPanel.add(exportParcels);
         buttonPanel.add(importCustomerButton);
         buttonPanel.add(exportCustomerButton);
+        buttonPanel.add(generateReportButton);
 
-// Add the log text area to the log panel
-        logPanel.add(new JScrollPane(logTextArea), BorderLayout.CENTER);
+
 
 // Table models and components
         DefaultTableModel customerTableModel = new DefaultTableModel(new String[]{"Sequence No", "First Name","Last Name", "Parcel ID"}, 0);
         JTable customerTable = new JTable(customerTableModel);
 
-        DefaultTableModel parcelTableModel = new DefaultTableModel(new String[]{"Parcel ID", "Weight", "Dimensions", "Fee", "Status", "Received Day", "Days Waiting"}, 0);
+        DefaultTableModel parcelTableModel = new DefaultTableModel(new String[]{
+                "Parcel ID", "Weight", "Dimensions", "Fee", "Status", "Received Day", "Days Waiting"
+        }, 0);
         JTable parcelTable = new JTable(parcelTableModel);
 
 // Add tables to the table panel
@@ -94,15 +102,17 @@ public class ParcelManagementGUI {
         tablePanel.setPreferredSize(new Dimension(800, 600)); // Adjust width and height as needed
 
 // Add panels to the main panel
+        log.addLogEntry("Application Started");
         mainPanel.add(inputPanel, BorderLayout.NORTH);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-        mainPanel.add(tablePanel, BorderLayout.CENTER); // Changed from EAST to CENTER for better layout
+        mainPanel.add(tablePanel, BorderLayout.CENTER);
 
 // Add the main panel to the frame
         frame.add(mainPanel);
 
 
         addCustomerButton.addActionListener(e -> {
+            log.addLogEntry("addCustomerButton Invoked");
             JButton AddValueButton = new JButton("Add Value");
             inputPanel.removeAll();
             inputPanel.add(customerNameLabel);
@@ -135,16 +145,119 @@ public class ParcelManagementGUI {
                     } else {
                         // Parcel ID does not exist in the ParcelMap
                         JOptionPane.showMessageDialog(frame, "The provided Parcel ID does not exist.");
+                        log.addLogEntry("The provided Parcel ID does not exist.");
                     }
                 } else {
                     // Fields are empty
                     JOptionPane.showMessageDialog(frame, "Please fill in all fields for the customer.");
+                    log.addLogEntry("Please fill in all fields for the customer.");
                 }
+                logTextArea.setText(log.getLog()); // Populate with logs
             });
         });
 
 
+        generateReportButton.addActionListener(e -> {
+            // Initialize counters and lists to store details
+            int parcelsCollected = 0;
+            int parcelsWaiting = 0;
+            double totalEarnings = 0.0;
+            int parcelsOver10Days = 0;
+
+            StringBuilder collectedDetails = new StringBuilder();
+            StringBuilder waitingDetails = new StringBuilder();
+            StringBuilder over10DaysDetails = new StringBuilder();
+
+            // Access the parcelTableModel directly (assuming it's declared as a class member)
+            DefaultTableModel model = parcelTableModel; // Access the model directly
+
+            // Check if the table is empty
+            if (model.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(null, "No parcels to generate report.");
+                return;  // Exit the method early
+            }
+
+            // Iterate through the rows of the parcel table model
+            for (int i = 0; i < model.getRowCount(); i++) {
+                // Get parcel details from each row
+                String parcelID = (String) model.getValueAt(i, 0);
+                String status = (String) model.getValueAt(i, 4);
+                double feeString = (double) model.getValueAt(i, 3);
+                long daysWaiting = (long) model.getValueAt(i, 6);
+                String dimensions = (String) model.getValueAt(i, 2);
+                String dateReceived = (String) model.getValueAt(i, 5);
+
+                // Count how many parcels are collected and add to total earnings
+                if ("Collected".equals(status)) {
+                    parcelsCollected++;
+                    totalEarnings += feeString;  // Add earnings for processed parcels
+                    collectedDetails.append(String.format("Parcel ID: %s, Fee: $%.2f, Dimensions: %s, Date Received: %s\n",
+                            parcelID, feeString, dimensions, dateReceived));
+                } else {
+                    // Count parcels still waiting
+                    parcelsWaiting++;
+                    waitingDetails.append(String.format("Parcel ID: %s, Fee: $%.2f, Dimensions: %s, Date Received: %s\n",
+                            parcelID, feeString, dimensions, dateReceived));
+                }
+
+                // Count parcels that have been in the depot for more than 10 days
+                if (daysWaiting > 10) {
+                    parcelsOver10Days++;
+                    over10DaysDetails.append(String.format("Parcel ID: %s, Days Waiting: %d, Fee: $%.2f, Dimensions: %s, Date Received: %s\n",
+                            parcelID, daysWaiting, feeString, dimensions, dateReceived));
+                }
+            }
+
+            // Generate the report in a txt file
+            try (FileWriter writer = new FileWriter("Parcel_Report.txt")) {
+                writer.write("Parcel Report\n");
+                writer.write("========================\n");
+                writer.write("Parcels Collected: " + parcelsCollected + "\n");
+                writer.write("Details of Collected Parcels:\n");
+                writer.write(collectedDetails.toString());
+
+                writer.write("\nParcels Still Waiting: " + parcelsWaiting + "\n");
+                writer.write("Details of Waiting Parcels:\n");
+                writer.write(waitingDetails.toString());
+
+                writer.write("\nTotal Earnings: $" + totalEarnings + "\n");
+
+                writer.write("\nParcels Waiting More Than 10 Days: " + parcelsOver10Days + "\n");
+                writer.write("Details of Parcels Waiting More Than 10 Days:\n");
+                writer.write(over10DaysDetails.toString());
+
+                writer.write("========================\n");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
+            // Show success message
+            JOptionPane.showMessageDialog(null, "Report generated successfully!");
+        });
+
+
+        showLogButton.addActionListener(e -> {
+            log.addLogEntry("showLogButton Invoked");
+            // Create a new JFrame for the log
+            JFrame logFrame = new JFrame("Logs");
+            logFrame.setSize(600, 400);
+
+            // JTextArea to display logs
+            logTextArea.setEditable(false);
+            logTextArea.setText(log.getLog()); // Populate with logs
+
+            // Add the JTextArea to a JScrollPane
+            JScrollPane scrollPane = new JScrollPane(logTextArea);
+
+            // Add the scrollPane to the JFrame
+            logFrame.add(scrollPane);
+
+            // Make the log frame visible
+            logFrame.setVisible(true);
+        });
+
         addParcelButton.addActionListener(e -> {
+            log.addLogEntry("addParcelButton Invoked");
             JButton AddValueButton = new JButton("Add Parcel");
 
             // Date Input Field
@@ -167,46 +280,70 @@ public class ParcelManagementGUI {
                 String dimensions = parcelDimensionsField.getText();
                 String dateReceived = dateField.getText();
 
-                if (!weightText.isEmpty() && !dimensions.isEmpty() && !dateReceived.isEmpty()) {
-                    try {
-                        // Validate and format the date input
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                        dateFormat.setLenient(false); // Strict date validation
-                        dateFormat.parse(dateReceived); // This will throw an exception if the date is invalid
-
-                        // Generate the next parcelID (e.g., P001, P002, P003)
-                        String newParcelID = generateNewParcelID();
-
-                        // Calculate the difference in days
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                        LocalDate receivedDate = LocalDate.parse(dateReceived, formatter);
-                        LocalDate currentDate = LocalDate.now();
-                        long daysDifference = ChronoUnit.DAYS.between(receivedDate, currentDate);
-
-                        double weight = Double.parseDouble(weightText); // Validate the weight input
-                        Parcel parcel = new Parcel(newParcelID, weight, dimensions, dateReceived);
-                        parcelMap.addParcel(parcel); // Add the parcel to the parcel map
-                        log.addLogEntry("Added parcel: " + newParcelID);
-
-                        parcelTableModel.addRow(new Object[]{
-                                newParcelID, weight, dimensions, parcel.calculateCollectionFee(dateReceived), parcel.getStatus(), dateReceived, daysDifference
-                        });
-
-                        JOptionPane.showMessageDialog(frame, "Parcel added successfully.");
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(frame, "Invalid weight format.");
-                    } catch (ParseException ex) {
-                        JOptionPane.showMessageDialog(frame, "Invalid date format. Use DD/MM/YYYY.");
+                try {
+                    // Validate all inputs
+                    if (weightText.isEmpty() || dimensions.isEmpty() || dateReceived.isEmpty()) {
+                        throw new IllegalArgumentException("All fields are required.");
                     }
-                } else {
-                    JOptionPane.showMessageDialog(frame, "Please fill in all fields for the parcel.");
+
+                    // Weight validation
+                    double weight = Double.parseDouble(weightText);
+                    if (weight <= 0) {
+                        throw new IllegalArgumentException("Weight must be a positive number.");
+                    }
+
+                    // Dimensions validation
+                    if (!dimensions.matches("\\d+X\\d+X\\d+")) {
+                        throw new IllegalArgumentException("Dimensions must be in the format aXbXc with positive integers.");
+                    }
+                    String[] dims = dimensions.split("X");
+                    for (String dim : dims) {
+                        int value = Integer.parseInt(dim);
+                        if (value <= 0) {
+                            throw new IllegalArgumentException("All dimensions must be positive integers.");
+                        }
+                    }
+
+                    // Date validation
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                    dateFormat.setLenient(false);
+                    Date date = dateFormat.parse(dateReceived);
+                    if (date.after(new Date())) {
+                        throw new IllegalArgumentException("Date cannot be in the future.");
+                    }
+
+                    // All validations passed, proceed to create parcel
+                    String newParcelID = generateNewParcelID();
+
+                    // Calculate the difference in days
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate receivedDate = LocalDate.parse(dateReceived, formatter);
+                    LocalDate currentDate = LocalDate.now();
+                    long daysDifference = ChronoUnit.DAYS.between(receivedDate, currentDate);
+
+
+                    Parcel parcel = new Parcel(newParcelID, weight, dimensions, dateReceived);
+                    parcelMap.addParcel(parcel);
+                    parcelTableModel.addRow(new Object[]{
+                            newParcelID, weight, dimensions, parcel.calculateCollectionFee(parcel.getDateReceived()), parcel.getStatus(), dateReceived,daysDifference
+                    });
+                    JOptionPane.showMessageDialog(frame, "Parcel added successfully.");
+                    log.addLogEntry("Added parcel: " + newParcelID);
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(frame, ex.getMessage());
+                    log.addLogEntry(ex.getMessage());
+                } catch (ParseException ex) {
+                    JOptionPane.showMessageDialog(frame, "Invalid date format. Use DD/MM/YYYY.");
+                    log.addLogEntry("Invalid date format. Use DD/MM/YYYY.");
                 }
+                logTextArea.setText(log.getLog()); // Update logs
             });
         });
 
 
 
         removeCustomerButton.addActionListener(e -> {
+            log.addLogEntry("removeCustomerButton Invoked");
             // Prompt the user to input the Parcel ID to find the associated customer
             String parcelIDToRemove = JOptionPane.showInputDialog(frame, "Enter the Parcel ID of the customer to remove:");
 
@@ -220,6 +357,7 @@ public class ParcelManagementGUI {
                     }
                 }
 
+                System.out.println(customerToRemove.getName());
                 if (customerToRemove != null) {
                     // Remove the customer from the customerQueue
                     customerQueue.removeCustomer(customerToRemove);
@@ -235,20 +373,25 @@ public class ParcelManagementGUI {
 
                     // Show confirmation message
                     JOptionPane.showMessageDialog(frame, "Customer with Parcel ID " + parcelIDToRemove + " removed successfully.");
+                    log.addLogEntry("Customer with Parcel ID " + parcelIDToRemove + " removed successfully.");
                 } else {
                     // Show error message if the customer is not found
                     JOptionPane.showMessageDialog(frame, "Customer with Parcel ID " + parcelIDToRemove + " not found.");
+                    log.addLogEntry("Customer with Parcel ID " + parcelIDToRemove + " not found.");
                 }
             } else {
                 // Show error message if no Parcel ID was entered
                 JOptionPane.showMessageDialog(frame, "Please enter a valid Parcel ID.");
+                log.addLogEntry("Please enter a valid Parcel ID.");
             }
+            logTextArea.setText(log.getLog()); // Populate with logs
         });
 
 
 
         // Add ActionListener to removeParcelButton (assuming you have a removeParcelButton in your UI)
         removeParcelButton.addActionListener(e -> {
+            log.addLogEntry("removeParcelButton Invoked");
             // Prompt the user to input the Parcel ID to remove
             String parcelIDToRemove = JOptionPane.showInputDialog(frame, "Enter the Parcel ID to remove:");
 
@@ -271,49 +414,49 @@ public class ParcelManagementGUI {
 
                     // Show confirmation message
                     JOptionPane.showMessageDialog(frame, "Parcel " + parcelIDToRemove + " removed successfully.");
+                    log.addLogEntry("Parcel " + parcelIDToRemove + " removed successfully.");
                 } else {
                     // Show error message if the parcel is not found
                     JOptionPane.showMessageDialog(frame, "Parcel with ID " + parcelIDToRemove + " not found.");
+                    log.addLogEntry("Parcel with ID " + parcelIDToRemove + " not found.");
                 }
             } else {
                 // Show error message if no Parcel ID was entered
                 JOptionPane.showMessageDialog(frame, "Please enter a valid Parcel ID.");
+                log.addLogEntry("Please enter a valid Parcel ID.");
             }
+            logTextArea.setText(log.getLog()); // Populate with logs
         });
 
         processCustomerButton.addActionListener(e -> {
-            inputPanel.removeAll();
-            inputPanel.add(parcelIDLabel);
-            inputPanel.add(parcelIDField);
-            inputPanel.add(parcelWeightLabel);
-            inputPanel.add(parcelWeightField);
-            inputPanel.add(parcelDimensionsLabel);
-            inputPanel.add(parcelDimensionsField);
-            inputPanel.revalidate();
-            inputPanel.repaint();
+            log.addLogEntry("processCustomerButton Invoked");
             if (!customerQueue.getQueue().isEmpty()) {
                 Customer customer = customerQueue.getQueue().peek();
                 worker.processCustomer(customer, parcelMap, customerQueue);
-                log.addLogEntry("Processed customer: " + customer.getName());
                 customerTableModel.removeRow(0);
                 for (int i = 0; i < parcelTableModel.getRowCount(); i++) {
                     if (parcelTableModel.getValueAt(i, 0).equals(customer.getParcelID())) {
                         parcelTableModel.setValueAt("Collected", i, 4);
+                        log.addLogEntry("Processed customer " + customer.getName() + " With Parcel "+customer.getParcelID() + " Fee: $"+parcelTableModel.getValueAt(i,3)+" on "+LocalDate.now());
+                        JOptionPane.showMessageDialog(frame, "Processed customer: " + customer.getName() + " With Parcel "+customer.getParcelID() );
                         break;
                     }
                 }
-                JOptionPane.showMessageDialog(frame, "Customer processed successfully.");
             } else {
                 JOptionPane.showMessageDialog(frame, "No customers to process.");
+                log.addLogEntry("No customers to process.");
             }
+            logTextArea.setText(log.getLog()); // Populate with logs
         });
 
         importParcels.addActionListener(e -> {
+            log.addLogEntry("importParcels Invoked");
             JFileChooser fileChooser = new JFileChooser();
             int returnValue = fileChooser.showOpenDialog(frame);
 
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
+                log.addLogEntry("file " + file.getName() +" Choosen ");
 
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                     String line;
@@ -329,28 +472,40 @@ public class ParcelManagementGUI {
                             long daysDifference = Long.parseLong(parts[6]);
 
                             // Create a Parcel object
+
                             Parcel parcel = new Parcel(parcelID, weight, dimensions, dateReceived);
                             parcel.setStatus(status);
 
                             // Add to parcelMap
                             parcelMap.addParcel(parcel);
+                            log.addLogEntry("Added Parcel "+ parcel.getParcelID() +"  into parcelMap and Parcel Table");
 
                             // Add to table model
-                            parcelTableModel.addRow(new Object[]{
-                                    parcelID, weight, dimensions, collectionFee, status, dateReceived, daysDifference
-                            });
+                            if (parcelTableModel != null) {
+                                parcelTableModel.addRow(new Object[]{
+                                        parcelID, weight, dimensions, collectionFee, status, dateReceived, daysDifference
+                                });
+                            } else {
+                                JOptionPane.showMessageDialog(frame, "Parcel Table Model is not initialized.");
+                                log.addLogEntry("Parcel Table Model is not initialized.");
+                            }
                         }
                     }
 
                     JOptionPane.showMessageDialog(frame, "Data imported successfully.");
+                    log.addLogEntry("Data imported successfully.");
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Error reading the file: " + ex.getMessage());
+                    log.addLogEntry("Error reading the file: " + ex.getMessage());
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Error in file data format: " + ex.getMessage());
+                    log.addLogEntry("Error in file data format: " + ex.getMessage());
                 }
             } else {
                 JOptionPane.showMessageDialog(frame, "File selection cancelled.");
+                log.addLogEntry("File selection Cancelled");
             }
+            logTextArea.setText(log.getLog()); // Populate with logs
         });
 
 
@@ -360,6 +515,7 @@ public class ParcelManagementGUI {
             int result = fileChooser.showSaveDialog(frame);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
+                log.addLogEntry("file " + selectedFile.getName() +" is Choosen for exporting parcels data");
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(selectedFile))) {
                     for (Parcel parcel : parcelMap.getAllParcels().values()) {
                         writer.write(String.format("%s,%.2f,%s,%.2f,%s,%s,%d%n",
@@ -372,10 +528,13 @@ public class ParcelManagementGUI {
                                 parcel.getDateDiff(parcel.getDateReceived())));
                     }
                     JOptionPane.showMessageDialog(frame, "Parcels exported successfully.");
+                    log.addLogEntry("Parcels exported successfully.");
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Error exporting parcels: " + ex.getMessage());
+                    log.addLogEntry("Error exporting parcels: " + ex.getMessage());
                 }
             }
+            logTextArea.setText(log.getLog()); // Populate with logs
         });
 
 
@@ -385,6 +544,7 @@ public class ParcelManagementGUI {
 
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
+                log.addLogEntry("file " + file.getName() +" is Choosen for exporting customers data");
 
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
                     for (Customer customer : customerQueue.getQueue()) {
@@ -393,12 +553,16 @@ public class ParcelManagementGUI {
                         writer.newLine();
                     }
                     JOptionPane.showMessageDialog(frame, "Customers exported successfully.");
+                    log.addLogEntry("Customers exported successfully.");
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Error exporting customers: " + ex.getMessage());
+                    log.addLogEntry("Error exporting customers: " + ex.getMessage());
                 }
             } else {
                 JOptionPane.showMessageDialog(frame, "Export cancelled.");
+                log.addLogEntry("Export cancelled.");
             }
+            logTextArea.setText(log.getLog()); // Populate with logs
         });
 
         importCustomerButton.addActionListener(e -> {
@@ -407,6 +571,7 @@ public class ParcelManagementGUI {
 
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
+                log.addLogEntry("file " + file.getName() +" is Choosen for importing Customer data");
 
                 try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                     String line;
@@ -421,25 +586,29 @@ public class ParcelManagementGUI {
                             // Creating and adding customer to customerQueue
                             Customer customer = new Customer(sequenceNo, name, lastName, parcelID);
                             customerQueue.addCustomer(customer);
+                            log.addLogEntry("Added Customer "+ customer.getName() + " " +customer.getLastname() +" into customerQueue and Customer Table");
 
                             // Adding customer to customer table
                             customerTableModel.addRow(new Object[]{sequenceNo, name, lastName, parcelID});
                         }
                     }
                     JOptionPane.showMessageDialog(frame, "Customers imported successfully.");
+                    log.addLogEntry("Customers imported successfully.");
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Error reading the file: " + ex.getMessage());
+                    log.addLogEntry("Error reading the file: " + ex.getMessage());
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Error in file data format: " + ex.getMessage());
+                    log.addLogEntry("Error in file data format: " + ex.getMessage());
                 }
             } else {
                 JOptionPane.showMessageDialog(frame, "File selection cancelled.");
+                log.addLogEntry("File selection cancelled.");
             }
+            logTextArea.setText(log.getLog()); // Populate with logs
         });
 
-
-        showLogButton.addActionListener(e -> logTextArea.setText(log.getLog()));
-
+        logTextArea.setText(log.getLog()); // Populate with logs
         frame.setVisible(true);
     }
 
@@ -459,6 +628,11 @@ public class ParcelManagementGUI {
         }
         highestID++; // Increment the highest ID by 1
         return String.format("P%03d", highestID); // Format to always have three digits (e.g., P001, P002)
+    }
+
+
+    public void generateReport() {
+
     }
 
     public static void main(String[] args) {

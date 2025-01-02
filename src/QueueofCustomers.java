@@ -1,3 +1,4 @@
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -13,12 +14,17 @@ public class QueueofCustomers {
     }
 
     public void removeCustomer(Customer c) {
-        for (Customer customer: queue) {
-            if (customer==c){
-                queue.remove(c);
+        // Using an iterator to safely remove items during iteration
+        Iterator<Customer> iterator = queue.iterator();
+        while (iterator.hasNext()) {
+            Customer customer = iterator.next();
+            if (customer == c) {
+                iterator.remove(); // Safely remove the customer from the queue
+                break; // Exit the loop once the customer is removed
             }
         }
-        }
+    }
+
 
     public Customer findCustomerByParcelID(String parcelID) {
         for (Customer customer : queue) {

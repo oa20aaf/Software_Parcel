@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class Log {
     private StringBuffer log;
 
@@ -11,5 +14,15 @@ public class Log {
 
     public String getLog() {
         return log.toString();
+    }
+
+    // New method to return log entries as a list of strings
+    public List<String> getLogEntries() {
+        List<String> logEntries = new ArrayList<>();
+        String[] entries = log.toString().split("\n");
+        for (String entry : entries) {
+            logEntries.add(entry);
+        }
+        return logEntries;
     }
 }
