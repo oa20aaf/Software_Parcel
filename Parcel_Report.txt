@@ -1,0 +1,38 @@
+Parcel Report
+========================
+Parcels Collected: 5
+Details of Collected Parcels:
+Parcel ID: P001, Fee: $14040.00, Dimensions: 4X3X6, Date Received: 20/12/2024
+Parcel ID: P002, Fee: $3528.00, Dimensions: 2X3X7, Date Received: 26/12/2024
+Parcel ID: P003, Fee: $2100.00, Dimensions: 5X2X8, Date Received: 22/12/2024
+Parcel ID: P004, Fee: $7653.00, Dimensions: 3X4X6, Date Received: 23/12/2024
+Parcel ID: P005, Fee: $5400.00, Dimensions: 6X3X5, Date Received: 24/12/2024
+
+Parcels Still Waiting: 15
+Details of Waiting Parcels:
+Parcel ID: P006, Fee: $8000.00, Dimensions: 4X4X7, Date Received: 25/12/2024
+Parcel ID: P007, Fee: $3045.00, Dimensions: 3X2X6, Date Received: 27/12/2024
+Parcel ID: P008, Fee: $6720.00, Dimensions: 5X3X7, Date Received: 28/12/2024
+Parcel ID: P009, Fee: $8800.00, Dimensions: 4X4X5, Date Received: 29/12/2024
+Parcel ID: P010, Fee: $3060.00, Dimensions: 2X3X8, Date Received: 30/12/2024
+Parcel ID: P011, Fee: $6840.00, Dimensions: 3X4X6, Date Received: 21/12/2024
+Parcel ID: P012, Fee: $7740.00, Dimensions: 4X3X6, Date Received: 20/12/2024
+Parcel ID: P013, Fee: $6120.00, Dimensions: 5X3X7, Date Received: 22/12/2024
+Parcel ID: P014, Fee: $8100.00, Dimensions: 4X4X5, Date Received: 24/12/2024
+Parcel ID: P015, Fee: $3100.00, Dimensions: 3X2X6, Date Received: 26/12/2024
+Parcel ID: P016, Fee: $3180.00, Dimensions: 2X3X8, Date Received: 23/12/2024
+Parcel ID: P017, Fee: $6750.00, Dimensions: 4X3X6, Date Received: 27/12/2024
+Parcel ID: P018, Fee: $2760.00, Dimensions: 3X4X5, Date Received: 25/12/2024
+Parcel ID: P019, Fee: $8280.00, Dimensions: 5X3X6, Date Received: 28/12/2024
+Parcel ID: P020, Fee: $6710.00, Dimensions: 4X3X7, Date Received: 29/12/2024
+
+Total Earnings: $32721.0
+
+Parcels Waiting More Than 10 Days: 5
+Details of Parcels Waiting More Than 10 Days:
+Parcel ID: P001, Days Waiting: 13, Fee: $14040.00, Dimensions: 4X3X6, Date Received: 20/12/2024
+Parcel ID: P003, Days Waiting: 11, Fee: $2100.00, Dimensions: 5X2X8, Date Received: 22/12/2024
+Parcel ID: P011, Days Waiting: 12, Fee: $6840.00, Dimensions: 3X4X6, Date Received: 21/12/2024
+Parcel ID: P012, Days Waiting: 13, Fee: $7740.00, Dimensions: 4X3X6, Date Received: 20/12/2024
+Parcel ID: P013, Days Waiting: 11, Fee: $6120.00, Dimensions: 5X3X7, Date Received: 22/12/2024
+========================
